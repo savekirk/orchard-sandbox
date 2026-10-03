@@ -1,0 +1,8 @@
+bin/
+web/node_modules/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.mcp.json
+.DS_Store

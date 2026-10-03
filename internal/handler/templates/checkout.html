@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout · Orchard Sandbox</title>
+<style>
+  :root {
+    --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280; --border: #e5e7eb;
+    --input: #ffffff; --accent: #15803d; --accent-ink: #ffffff; --soft: #f9fafb;
+    --ok: #15803d; --ok-soft: #dcfce7; --bad: #b91c1c; --bad-soft: #fee2e2; --wait: #b45309; --wait-soft: #fef3c7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0d10; --card: #14171c; --text: #f3f4f6; --muted: #9ca3af; --border: #262a31;
+      --input: #0f1216; --accent: #22c55e; --accent-ink: #052e12; --soft: #181c22;
+      --ok: #4ade80; --ok-soft: #052e16; --bad: #f87171; --bad-soft: #3b0d0d; --wait: #fbbf24; --wait-soft: #3a2a05;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; padding: 32px 16px; }
+  .banner { font-size: 12px; color: var(--muted); margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+  .pill { background: var(--wait-soft); color: var(--wait); font-weight: 600; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+  .card { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(0,0,0,.18); }
+  .head { padding: 24px 24px 20px; border-bottom: 1px solid var(--border); }
+  .merchant { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center; font-weight: 700; }
+  .merchant small { display: block; color: var(--muted); font-size: 12px; }
+  .amount { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 18px 0 2px; font-variant-numeric: tabular-nums; }
+  .amount span { font-size: 16px; color: var(--muted); font-weight: 600; margin-right: 6px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .body { padding: 20px 24px 24px; }
+  .tabs { display: grid; grid-auto-flow: column; gap: 6px; background: var(--soft); border: 1px solid var(--border); padding: 4px; border-radius: 10px; margin-bottom: 18px; }
+  .tabs[hidden], .tab-input { display: none; }
+  .tabs label { text-align: center; padding: 8px; border-radius: 7px; cursor: pointer; font-weight: 500; color: var(--muted); font-size: 14px; }
+  #m-momo:checked ~ .tabs label[for=m-momo], #m-card:checked ~ .tabs label[for=m-card] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .pane { display: none; }
+  #m-momo:checked ~ .panes .momo, #m-card:checked ~ .panes .card-pane { display: block; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  input[type=text], input[type=tel], select { width: 100%; padding: 10px 12px; font: inherit; color: var(--text);
+    background: var(--input); border: 1px solid var(--border); border-radius: 8px; outline: none; }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+  .error { background: var(--bad-soft); color: var(--bad); padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+  .pay { width: 100%; padding: 12px; font: inherit; font-weight: 600; border: 0; border-radius: 10px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); margin-top: 4px; }
+  .pay:hover { filter: brightness(1.05); }
+  .cancel { width: 100%; padding: 10px; font: inherit; font-size: 14px; background: none; border: 0; color: var(--muted); cursor: pointer; margin-top: 6px; }
+  .cancel:hover { color: var(--text); }
+  details { margin-top: 18px; border-top: 1px dashed var(--border); padding-top: 14px; font-size: 13px; color: var(--muted); }
+  summary { cursor: pointer; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  td { padding: 4px 0; vertical-align: top; }
+  code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--soft); border: 1px solid var(--border); padding: 1px 5px; border-radius: 5px; color: var(--text); }
+  .result { text-align: center; padding: 28px 24px 24px; }
+  .icon { width: 56px; height: 56px; border-radius: 999px; display: grid; place-items: center; margin: 0 auto 14px; font-size: 26px; font-weight: 700; }
+  .icon.ok { background: var(--ok-soft); color: var(--ok); }
+  .icon.bad { background: var(--bad-soft); color: var(--bad); }
+  .icon.wait { background: var(--wait-soft); color: var(--wait); }
+  .result h1 { font-size: 20px; margin: 0 0 4px; }
+  .result p { margin: 0 0 18px; color: var(--muted); }
+  a.pay { display: block; text-align: center; text-decoration: none; }
+  .foot { margin-top: 16px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="banner"><span class="pill">SANDBOX</span> Test payment. No real money moves.</div>
+  <main class="card">
+    <div class="head">
+      <div class="merchant">
+        <div class="avatar">{{slice .Merchant 0 1}}</div>
+        <div><strong>{{.Merchant}}</strong><small>Orchard Checkout</small></div>
+      </div>
+      <div class="amount"><span>GHS</span>{{.Txn.Amount}}</div>
+      <div class="meta">{{if .Txn.Reference}}{{.Txn.Reference}} · {{end}}Ref {{.Txn.Exttrid}}</div>
+    </div>
+
+    {{if eq .Txn.Status "PENDING"}}{{if or (eq .Txn.CustomerNumber "") .Error}}
+    <form class="body" method="post" action="/payment_page">
+      <input type="hidden" name="code" value="{{.Code}}">
+      {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+      <input class="tab-input" type="radio" name="method" value="momo" id="m-momo" {{if ne .Mode "CRD"}}checked{{end}}>
+      <input class="tab-input" type="radio" name="method" value="card" id="m-card" {{if eq .Mode "CRD"}}checked{{end}}>
+      <div class="tabs" {{if ne .Mode "CRM"}}hidden{{end}}>
+        <label for="m-momo">Mobile Money</label><label for="m-card">Card</label>
+      </div>
+      <div class="panes">
+        <div class="pane momo">
+          <div class="field">
+            <label for="network">Network</label>
+            <select id="network" name="network">
+              <option value="MTN">MTN Mobile Money</option>
+              <option value="VOD">Telecel Cash</option>
+              <option value="AIR">AirtelTigo Money</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="msisdn">Mobile money number</label>
+            <input type="tel" id="msisdn" name="msisdn" placeholder="024 123 4567" value="0241234567" inputmode="numeric">
+          </div>
+        </div>
+        <div class="pane card-pane">
+          <div class="field">
+            <label for="card_number">Card number</label>
+            <input type="text" id="card_number" name="card_number" value="4111 1111 1111 1111" inputmode="numeric">
+          </div>
+          <div class="row">
+            <div class="field"><label for="exp">Expiry</label><input type="text" id="exp" value="12 / 30"></div>
+            <div class="field"><label for="cvv">CVV</label><input type="text" id="cvv" value="123"></div>
+          </div>
+        </div>
+      </div>
+      <button class="pay" name="action" value="pay">Pay GHS {{.Txn.Amount}}</button>
+      <button class="cancel" name="action" value="cancel">Cancel payment</button>
+      <details>
+        <summary>Sandbox test numbers</summary>
+        <table>
+          {{range .Scenarios}}<tr><td>Ends in <code>{{.Suffix}}</code></td><td>{{.Description}}</td></tr>{{end}}
+          <tr><td>Anything else</td><td>Payment succeeds</td></tr>
+        </table>
+      </details>
+    </form>
+    {{else}}
+    <div class="result">
+      <div class="icon wait">…</div>
+      <h1>Waiting for approval</h1>
+      <p>The payment is still pending. Resolve it from the sandbox dashboard.</p>
+    </div>
+    {{end}}{{else}}
+    <div class="result">
+      {{if eq .Txn.Status "SUCCESSFUL"}}
+        <div class="icon ok">✓</div><h1>Payment successful</h1>
+      {{else}}
+        <div class="icon bad">✕</div><h1>Payment failed</h1>
+      {{end}}
+      <p>{{.Txn.Message}} · Transaction {{.Txn.TransID}}</p>
+      {{if .BackToShop}}<a class="pay" href="{{.BackToShop}}">Return to {{.Merchant}}</a>{{end}}
+    </div>
+    {{end}}
+  </main>
+  <div class="foot">Orchard Sandbox</div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# Orchard Sandbox configuration. Every key is optional.
+# Use it with: orchard-sandbox -config orchard-sandbox.yaml
+# Environment variables (ORCHARD_SANDBOX_*) override these values.
+
+port: "8080"
+db: ""                    # SQLite file to keep data between restarts; empty = in memory
+public_url: ""            # Origin used in checkout links, e.g. https://sandbox.example.com
+
+credentials:
+  client_key: test_client_key
+  secret_key: test_secret_key
+  service_id: "1234"
+
+settings:
+  require_auth: true      # reject unsigned requests like Orchard does (101/102/103)
+  settle_mode: auto       # auto | manual (payments stay pending until you resolve them)
+  settle_delay_ms: 3000   # how long a payment stays pending in auto mode
+  latency_ms: 0           # extra delay on every API response
+  callback_attempts: 3
+  callback_timeout_ms: 10000
+
+balances:                 # opening wallet balances in GHS (sms in units)
+  collect: 75000
+  payout: 50000
+  billpay: 10000
+  airtime: 5000
+  sms: 1000
+
+cards:                    # fixed /verifyID answers
+  - id_num: GHA-000000001-1
+    name: Esi Ansah
+    gender: F
+    verified: "true"
+    card_valid_start: "2021-01-01"
+    card_valid_end: "2031-01-01"
+
+accounts:                 # fixed account inquiry (AII) answers
+  - bank_code: GCB
+    account_number: "1020304050"
+    account_name: Esi Ansah
+  - bank_code: MTN
+    account_number: "0249999999"
+    resp_code: "067"      # make this lookup fail
