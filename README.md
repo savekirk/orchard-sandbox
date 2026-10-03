@@ -179,3 +179,7 @@ just docker     # container image
 ```
 
 The dashboard build in `internal/web/dist` is committed so `go install` works. Run `just build-web` after changing `web/`.
+
+## License
+
+[MIT](LICENSE)
